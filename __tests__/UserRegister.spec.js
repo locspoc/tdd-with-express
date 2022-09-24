@@ -5,6 +5,7 @@
  * 1. Returns 200 OK when signup request is valid
  * 2. Returns success message when signup request is valid
  * 3. Saves the user to database
+ * 4. Hashes the password in database
  */
 
 const request = require('supertest');
@@ -81,10 +82,30 @@ describe('User Registration', () => {
         // query user table
         User.findAll().then((userList) => {
           const savedUser = userList[0];
+          //   console.log(userList[0]);
           expect(savedUser.username).toBe('user1');
           expect(savedUser.email).toBe('user1@gmail.com');
+          done();
         });
-        done();
+      });
+    // .expect(200, done);
+  });
+
+  it('hashes the password in database', (done) => {
+    request(app)
+      .post('/api/1.0/users')
+      .send({
+        username: 'user1',
+        email: 'user1@gmail.com',
+        password: 'P4ssword',
+      })
+      .then(() => {
+        // query user table
+        User.findAll().then((userList) => {
+          const savedUser = userList[0];
+          expect(savedUser.password).not.toBe('P4ssword');
+          done();
+        });
       });
     // .expect(200, done);
   });

@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/locspoc/tdd-with-express#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "express": "^4.18.1",
     "sequelize": "^6.23.1",
     "sqlite3": "^5.1.1"
@@ -34,7 +35,7 @@
   },
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 6
+      "ecmaVersion": 2018
     },
     "extends": [
       "eslint:recommended",
