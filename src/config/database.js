@@ -7,7 +7,7 @@ const dbConfig = config.get('database');
 const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
   dialect: dbConfig.dialect,
   storage: dbConfig.storage,
-  // logging: dbConfig.logging,
+  logging: false,
 });
 
 module.exports = sequelize;
