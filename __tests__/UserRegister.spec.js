@@ -79,7 +79,16 @@ describe('User Registration', () => {
       password: 'P4ssword',
     });
     const body = response.body;
-    console.log('body: ', body);
+    // console.log('body: ', body);
     expect(body.validationErrors).not.toBeUndefined();
+  });
+  it('returns Username can not be null when username is null', async () => {
+    const response = await postUser({
+      username: null,
+      email: 'user1@gmail.com',
+      password: 'P4ssword',
+    });
+    const body = response.body;
+    expect(body.validationErrors.username).toBe('Username can not be null');
   });
 });
