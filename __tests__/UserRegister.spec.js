@@ -7,6 +7,10 @@
  * 3. Saves the user to database
  * 4. Hashes the password in database
  * 5. Returns 400 when username is null
+ * 6. Returns validationErrors field in response body when validation error occurs
+ * 7. Returns Username can not be null when username is null
+ * 8. Returns Email can not be null when email is null
+ * 9. Returns errors for both when username and email is null
  */
 
 const request = require('supertest');
@@ -90,5 +94,32 @@ describe('User Registration', () => {
     });
     const body = response.body;
     expect(body.validationErrors.username).toBe('Username can not be null');
+  });
+  it('returns Email can not be null when email is null', async () => {
+    const response = await postUser({
+      username: 'user1',
+      email: null,
+      password: 'P4ssword',
+    });
+    const body = response.body;
+    expect(body.validationErrors.email).toBe('Email can not be null');
+  });
+  it('returns Email can not be null when email is null', async () => {
+    const response = await postUser({
+      username: 'user1',
+      email: null,
+      password: 'P4ssword',
+    });
+    const body = response.body;
+    expect(body.validationErrors.email).toBe('Email can not be null');
+  });
+  it('returns errors for both when username and email is null', async () => {
+    const response = await postUser({
+      username: null,
+      email: null,
+      password: 'P4ssword',
+    });
+    const body = response.body;
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
 });
