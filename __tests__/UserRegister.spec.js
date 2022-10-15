@@ -1,17 +1,5 @@
 /**
  * User Register Specifciations
- *
- * User Register
- * 1. Returns 200 OK when signup request is valid
- * 2. Returns success message when signup request is valid
- * 3. Saves the user to database
- * 4. Hashes the password in database
- * 5. Returns 400 when username is null
- * 6. Returns validationErrors field in response body when validation error occurs
- * 7. Returns errors for both when username and email is null
- * 8. Returns Username can not be null when username is null
- * 9. Returns Email can not be null when email is null
- * 10. Returns size validation error when username is less than 4 characters or more than 32 characters
  */
 
 const request = require('supertest');
@@ -126,5 +114,22 @@ describe('User Registration', () => {
     const response = await postUser(user);
     const body = response.body;
     expect(body.validationErrors[field]).toBe(expectedMessage);
+  });
+
+  it('returns Email in use when same email is already in use', async () => {
+    await User.create({ ...validUser });
+    const response = await postUser();
+    expect(response.body.validationErrors.email).toBe('Email in use');
+  });
+
+  it('returns errors for both username is null and email is in use', async () => {
+    await User.create({ ...validUser });
+    const response = await postUser({
+      username: null,
+      email: validUser.email,
+      password: 'P4ssword',
+    });
+    const body = response.body;
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
 });

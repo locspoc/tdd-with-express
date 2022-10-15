@@ -1,5 +1,6 @@
 const express = require('express');
 const UserService = require('./UserService');
+const User = require('./User');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
 
@@ -32,7 +33,19 @@ router.post(
     .bail()
     .isLength({ min: 4, max: 32 })
     .withMessage('Must have min 4 and max 32 characters'),
-  check('email').notEmpty().withMessage('Email can not be null').bail().isEmail().withMessage('Email is not valid'),
+  check('email')
+    .notEmpty()
+    .withMessage('Email can not be null')
+    .bail()
+    .isEmail()
+    .withMessage('Email is not valid')
+    .bail()
+    .custom(async (email) => {
+      const user = await UserService.findByEmail(email);
+      if (user) {
+        throw new Error('Email in use');
+      }
+    }),
   check('password')
     .notEmpty()
     .withMessage('Password can not be null')
