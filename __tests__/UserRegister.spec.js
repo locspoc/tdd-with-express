@@ -11,7 +11,7 @@
  * 7. Returns errors for both when username and email is null
  * 8. Returns Username can not be null when username is null
  * 9. Returns Email can not be null when email is null
- * 10.
+ * 10. Returns size validation error when username is less than 4 characters or more than 32 characters
  */
 
 const request = require('supertest');
@@ -100,17 +100,29 @@ describe('User Registration', () => {
   });
 
   it.each`
-    field         | expectedMessage
-    ${'username'} | ${'Username can not be null'}
-    ${'email'}    | ${'Email can not be null'}
-    ${'password'} | ${'Password can not be null'}
-  `('returns $expectedMessage when $field is null', async ({ field, expectedMessage }) => {
+    field         | value              | expectedMessage
+    ${'username'} | ${null}            | ${'Username can not be null'}
+    ${'username'} | ${'usr'}           | ${'Must have min 4 and max 32 characters'}
+    ${'username'} | ${'a'.repeat(33)}  | ${'Must have min 4 and max 32 characters'}
+    ${'email'}    | ${null}            | ${'Email can not be null'}
+    ${'email'}    | ${'mail.com'}      | ${'Email is not valid'}
+    ${'email'}    | ${'user.mail.com'} | ${'Email is not valid'}
+    ${'email'}    | ${'user@mail'}     | ${'Email is not valid'}
+    ${'password'} | ${null}            | ${'Password can not be null'}
+    ${'password'} | ${'P4ssw'}         | ${'Password must be at least 6 characters'}
+    ${'password'} | ${'alllowercase'}  | ${'Password must have at least 1 uppercase, 1 lowercase and 1 number'}
+    ${'password'} | ${'ALLUPPERCASE'}  | ${'Password must have at least 1 uppercase, 1 lowercase and 1 number'}
+    ${'password'} | ${'1234567890'}    | ${'Password must have at least 1 uppercase, 1 lowercase and 1 number'}
+    ${'password'} | ${'lowerandUPPER'} | ${'Password must have at least 1 uppercase, 1 lowercase and 1 number'}
+    ${'password'} | ${'lowerand5678'}  | ${'Password must have at least 1 uppercase, 1 lowercase and 1 number'}
+    ${'password'} | ${'UPPERAND5678'}  | ${'Password must have at least 1 uppercase, 1 lowercase and 1 number'}
+  `('returns $expectedMessage when $field is $value', async ({ field, value, expectedMessage }) => {
     const user = {
       username: 'user1',
       email: 'user1@mail.com',
       password: 'P4ssword',
     };
-    user[field] = null;
+    user[field] = value;
     const response = await postUser(user);
     const body = response.body;
     expect(body.validationErrors[field]).toBe(expectedMessage);
