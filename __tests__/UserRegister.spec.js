@@ -150,15 +150,15 @@ describe('User Registration', () => {
 });
 
 describe('Internationalization', () => {
-  const username_null = 'Tên người dùng không được để trống';
-  const username_size = 'Phải có tối thiểu 4 ký tự và tối đa 32 ký tự';
-  const email_null = 'Email không được để trống';
-  const email_invalid = 'Email không hợp lệ';
-  const password_null = 'Mật khẩu không được rỗng';
-  const password_size = 'Mật khẩu phải ít nhất 6 kí tự';
-  const password_pattern = 'Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số';
-  const email_inuse = 'Email đang được sử dụng';
-  const user_create_success = 'Người dùng đã tạo';
+  const username_null = 'Kullanıcı adı boş olamaz';
+  const username_size = 'Minimum 4 ve maksimum 32 karakter olmalıdır';
+  const email_null = 'E-posta boş olamaz';
+  const email_invalid = 'E-posta geçerli değil';
+  const password_null = 'Şifre boş olamaz';
+  const password_size = 'şifre en az 6 karakterden oluşmalıdır';
+  const password_pattern = 'Şifrede en az 1 büyük harf, 1 küçük harf ve 1 rakam olmalıdır';
+  const email_inuse = 'E-posta kullanımda';
+  const user_create_success = 'Kullanıcı oluşturuldu';
 
   it.each`
     field         | value              | expectedMessage
@@ -186,7 +186,7 @@ describe('Internationalization', () => {
         password: 'P4ssword',
       };
       user[field] = value;
-      const response = await postUser(user, { language: 'vn' });
+      const response = await postUser(user, { language: 'tr' });
       const body = response.body;
       expect(body.validationErrors[field]).toBe(expectedMessage);
     }
@@ -194,12 +194,12 @@ describe('Internationalization', () => {
 
   it(`returns ${email_inuse} when same email is already in use when language is set as Vietnamese`, async () => {
     await User.create({ ...validUser });
-    const response = await postUser({ ...validUser }, { language: 'vn' });
+    const response = await postUser({ ...validUser }, { language: 'tr' });
     expect(response.body.validationErrors.email).toBe(email_inuse);
   });
 
   it(`returns success message of ${user_create_success} when signup request is valid`, async () => {
-    const response = await postUser();
+    const response = await postUser({ ...validUser }, { language: 'tr' });
     expect(response.body.message).toBe(user_create_success);
   });
 });
