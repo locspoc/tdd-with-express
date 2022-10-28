@@ -7,5 +7,6 @@
   "password_size": "şifre en az 6 karakterden oluşmalıdır",
   "password_pattern": "Şifrede en az 1 büyük harf, 1 küçük harf ve 1 rakam olmalıdır",
   "email_inuse": "E-posta kullanımda",
-  "user_create_success": "Kullanıcı oluşturuldu"
+  "user_create_success": "Kullanıcı oluşturuldu",
+  "email_failure": "E-posta hatası"
 }
