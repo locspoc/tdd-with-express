@@ -7,6 +7,7 @@ const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
 // const { describe } = require('../src/user/User');
+const nodemailerStub = require('nodemailer-stub');
 
 beforeAll(() => {
   return sequelize.sync();
@@ -18,7 +19,7 @@ beforeEach(() => {
 
 const validUser = {
   username: 'user1',
-  email: 'user1@gmail.com',
+  email: 'user1@mail.com',
   password: 'P4ssword',
 };
 
@@ -47,7 +48,7 @@ describe('User Registration', () => {
     const userList = await User.findAll();
     const savedUser = userList[0];
     expect(savedUser.username).toBe('user1');
-    expect(savedUser.email).toBe('user1@gmail.com');
+    expect(savedUser.email).toBe('user1@mail.com');
   });
 
   it('hashes the password in database', async () => {
@@ -60,7 +61,7 @@ describe('User Registration', () => {
   it('returns 400 when username is null', async () => {
     const response = await postUser({
       username: null,
-      email: 'user1@gmail.com',
+      email: 'user1@mail.com',
       password: 'P4ssword',
     });
     expect(response.status).toBe(400);
@@ -69,7 +70,7 @@ describe('User Registration', () => {
   it('returns validationErrors field in response body when validation error occurs', async () => {
     const response = await postUser({
       username: null,
-      email: 'user1@gmail.com',
+      email: 'user1@mail.com',
       password: 'P4ssword',
     });
     const body = response.body;
@@ -165,6 +166,14 @@ describe('User Registration', () => {
     const users = await User.findAll();
     const savedUser = users[0];
     expect(savedUser.activationToken).toBeTruthy();
+  });
+  it('sends an Account activation email with activationToken', async () => {
+    await postUser();
+    const lastMail = nodemailerStub.interactsWithMail.lastMail();
+    expect(lastMail.to[0]).toBe('user1@mail.com');
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(lastMail.content).toContain(savedUser.activationToken);
   });
 });
 
