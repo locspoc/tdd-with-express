@@ -1,0 +1,10 @@
+{
+  "username_null": "Tên người dùng không được để trống",
+  "username_size": "Phải có tối thiểu 4 ký tự và tối đa 32 ký tự",
+  "email_null": "Email không được để trống",
+  "email_invalid": "Email không hợp lệ",
+  "password_null": "Mật khẩu không được rỗng",
+  "password_size": "Mật khẩu phải ít nhất 6 kí tự",
+  "password_pattern": "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số",
+  "email_inuse": "Email đang được sử dụng"
+}
