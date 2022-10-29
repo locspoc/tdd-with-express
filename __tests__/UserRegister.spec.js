@@ -6,6 +6,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
+const { describe } = require('../src/user/User');
 const SMTPServer = require('smtp-server').SMTPServer;
 
 let lastMail, server;
@@ -283,5 +284,19 @@ describe('Internationalization', () => {
     simulateSmtpFailure = true;
     const response = await postUser({ ...validUser }, { language: 'tr' });
     expect(response.body.message).toBe(email_failure);
+  });
+});
+
+describe('Account activation', () => {
+  it('activates the account when correct token is sent', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    users = await User.findAll();
+    expect(users[0].inactive).toBe(false);
   });
 });
