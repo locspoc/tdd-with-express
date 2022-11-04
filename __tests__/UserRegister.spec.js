@@ -6,7 +6,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
-const { describe } = require('../src/user/User');
+// const { describe } = require('../src/user/User');
 const SMTPServer = require('smtp-server').SMTPServer;
 
 let lastMail, server;
@@ -292,6 +292,7 @@ describe('Account activation', () => {
     await postUser();
     let users = await User.findAll();
     const token = users[0].activationToken;
+    // console.log('testing');
 
     await request(app)
       .post('/api/1.0/users/token/' + token)
@@ -299,4 +300,55 @@ describe('Account activation', () => {
     users = await User.findAll();
     expect(users[0].inactive).toBe(false);
   });
+  it('removes the token from user table after successful activation', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+    // console.log('testing');
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    users = await User.findAll();
+    expect(users[0].activationToken).toBeFalsy();
+  });
+  it('does not activate the account when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    const users = await User.findAll();
+    expect(users[0].inactive).toBe(true);
+  });
+  it('returns bad request when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    expect(response.status).toBe(400);
+  });
+  it.each`
+    language | tokenStatus  | message
+    ${'tr'}  | ${'wrong'}   | ${'Bu hesap ya aktif ya da jeton geçersiz'}
+    ${'en'}  | ${'wrong'}   | ${'This account is either active or the token in invalid'}
+    ${'tr'}  | ${'correct'} | ${'Hesap etkinleştirildi'}
+    ${'en'}  | ${'correct'} | ${'Account is activated'}
+  `(
+    'returns $message when token is $tokenStatus and language is $language',
+    async ({ language, tokenStatus, message }) => {
+      await postUser();
+      let token = 'this-token-does-not-exist';
+      if (tokenStatus === 'correct') {
+        let users = await User.findAll();
+        token = users[0].activationToken;
+      }
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .set('Accept-Language', language)
+        .send();
+      expect(response.body.message).toBe(message);
+    }
+  );
 });
