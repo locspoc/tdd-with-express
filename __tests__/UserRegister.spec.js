@@ -7,18 +7,51 @@ const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
 // const { describe } = require('../src/user/User');
+const SMTPServer = require('smtp-server').SMTPServer;
 
-beforeAll(() => {
-  return sequelize.sync();
+let lastMail, server;
+let simulateSmtpFailure = false;
+
+beforeAll(async () => {
+  server = new SMTPServer({
+    authOptional: true,
+
+    onData(stream, session, callback) {
+      let mailBody;
+
+      stream.on('data', (data) => {
+        mailBody += data.toString();
+      });
+
+      stream.on('end', () => {
+        if (simulateSmtpFailure) {
+          const err = new Error('Invalid mailbox');
+          err.responseCode = 553;
+          return callback(err);
+        }
+        lastMail = mailBody;
+        callback();
+      });
+    },
+  });
+
+  await server.listen(8587, 'localhost');
+
+  await sequelize.sync();
 });
 
 beforeEach(() => {
+  simulateSmtpFailure = false;
   return User.destroy({ truncate: true });
+});
+
+afterAll(async () => {
+  await server.close();
 });
 
 const validUser = {
   username: 'user1',
-  email: 'user1@gmail.com',
+  email: 'user1@mail.com',
   password: 'P4ssword',
 };
 
@@ -47,7 +80,7 @@ describe('User Registration', () => {
     const userList = await User.findAll();
     const savedUser = userList[0];
     expect(savedUser.username).toBe('user1');
-    expect(savedUser.email).toBe('user1@gmail.com');
+    expect(savedUser.email).toBe('user1@mail.com');
   });
 
   it('hashes the password in database', async () => {
@@ -60,7 +93,7 @@ describe('User Registration', () => {
   it('returns 400 when username is null', async () => {
     const response = await postUser({
       username: null,
-      email: 'user1@gmail.com',
+      email: 'user1@mail.com',
       password: 'P4ssword',
     });
     expect(response.status).toBe(400);
@@ -69,7 +102,7 @@ describe('User Registration', () => {
   it('returns validationErrors field in response body when validation error occurs', async () => {
     const response = await postUser({
       username: null,
-      email: 'user1@gmail.com',
+      email: 'user1@mail.com',
       password: 'P4ssword',
     });
     const body = response.body;
@@ -96,6 +129,7 @@ describe('User Registration', () => {
   const password_pattern = 'Password must have at least 1 uppercase, 1 lowercase and 1 number';
   const email_inuse = 'Email in use';
   const user_create_success = 'User created';
+  const email_failure = 'Email failure';
 
   it.each`
     field         | value              | expectedMessage
@@ -147,6 +181,48 @@ describe('User Registration', () => {
     const body = response.body;
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
+  it('creates user in inactive mode', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+  it('creates user in inactive mode even the request body contains inactive as false', async () => {
+    const newUser = { ...validUser, inactive: false };
+    await postUser(newUser);
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+  it('creates an activationToken for user', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.activationToken).toBeTruthy();
+  });
+  it('sends an Account activation email with activationToken', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(lastMail).toContain('user1@mail.com');
+    expect(lastMail).toContain(savedUser.activationToken);
+  });
+  it('returns 502 Bad Gateway when sending email fails', async () => {
+    simulateSmtpFailure = true;
+    const response = await postUser();
+    expect(response.status).toBe(502);
+  });
+  it('returns Email failure message when sending email fails', async () => {
+    simulateSmtpFailure = true;
+    const response = await postUser();
+    expect(response.body.message).toBe('Email failure');
+  });
+  it('does not save user to database if activation email fails', async () => {
+    simulateSmtpFailure = true;
+    await postUser();
+    const users = await User.findAll();
+    expect(users.length).toBe(0);
+  });
 });
 
 describe('Internationalization', () => {
@@ -159,6 +235,7 @@ describe('Internationalization', () => {
   const password_pattern = 'Şifrede en az 1 büyük harf, 1 küçük harf ve 1 rakam olmalıdır';
   const email_inuse = 'E-posta kullanımda';
   const user_create_success = 'Kullanıcı oluşturuldu';
+  const email_failure = 'E-posta hatası';
 
   it.each`
     field         | value              | expectedMessage
@@ -202,4 +279,76 @@ describe('Internationalization', () => {
     const response = await postUser({ ...validUser }, { language: 'tr' });
     expect(response.body.message).toBe(user_create_success);
   });
+
+  it(`returns ${email_failure} message when sending email fails and language is set as Turkish`, async () => {
+    simulateSmtpFailure = true;
+    const response = await postUser({ ...validUser }, { language: 'tr' });
+    expect(response.body.message).toBe(email_failure);
+  });
+});
+
+describe('Account activation', () => {
+  it('activates the account when correct token is sent', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+    // console.log('testing');
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    users = await User.findAll();
+    expect(users[0].inactive).toBe(false);
+  });
+  it('removes the token from user table after successful activation', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+    // console.log('testing');
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    users = await User.findAll();
+    expect(users[0].activationToken).toBeFalsy();
+  });
+  it('does not activate the account when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    const users = await User.findAll();
+    expect(users[0].inactive).toBe(true);
+  });
+  it('returns bad request when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    expect(response.status).toBe(400);
+  });
+  it.each`
+    language | tokenStatus  | message
+    ${'tr'}  | ${'wrong'}   | ${'Bu hesap ya aktif ya da jeton geçersiz'}
+    ${'en'}  | ${'wrong'}   | ${'This account is either active or the token in invalid'}
+    ${'tr'}  | ${'correct'} | ${'Hesap etkinleştirildi'}
+    ${'en'}  | ${'correct'} | ${'Account is activated'}
+  `(
+    'returns $message when token is $tokenStatus and language is $language',
+    async ({ language, tokenStatus, message }) => {
+      await postUser();
+      let token = 'this-token-does-not-exist';
+      if (tokenStatus === 'correct') {
+        let users = await User.findAll();
+        token = users[0].activationToken;
+      }
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .set('Accept-Language', language)
+        .send();
+      expect(response.body.message).toBe(message);
+    }
+  );
 });

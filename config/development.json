@@ -6,5 +6,13 @@
     "dialect": "sqlite",
     "storage": "./database.sqlite",
     "logging": "false"
+  },
+  "mail": {
+    "host": "smtp.ethereal.email",
+    "port": 587,
+    "auth": {
+      "user": "margret.marvin@ethereal.email",
+      "pass": "NzVtzvSc781kbW2Qpj"
+    }
   }
 }
