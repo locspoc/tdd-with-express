@@ -269,7 +269,7 @@ describe('Internationalization', () => {
     }
   );
 
-  it(`returns ${email_inuse} when same email is already in use when language is set as Vietnamese`, async () => {
+  it(`returns ${email_inuse} when same email is already in use when language is set as Turkish`, async () => {
     await User.create({ ...validUser });
     const response = await postUser({ ...validUser }, { language: 'tr' });
     expect(response.body.validationErrors.email).toBe(email_inuse);
