@@ -61,12 +61,17 @@ const postUser = (user = validUser, options = {}) => {
   if (options.language) {
     agent.set('Accept-Language', options.language);
   }
+  // console.log('user: ', user);
+  // console.log('agent: ', agent);
+  // console.log('app: ', app);
   return agent.send(user);
 };
 
 describe('User Registration', () => {
   it('returns 200 OK when signup request is valid', async () => {
     const response = await postUser();
+    console.log('response: ', response);
+    console.log('response.status: ', response.status);
     expect(response.status).toBe(200);
   });
 
