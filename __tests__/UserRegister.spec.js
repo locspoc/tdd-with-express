@@ -9,6 +9,7 @@ const sequelize = require('../src/config/database');
 // const { describe } = require('../src/user/User');
 // const { describe } = require('../src/user/User');
 const SMTPServer = require('smtp-server').SMTPServer;
+// const jest = require('jest');
 
 let lastMail, server;
 let simulateSmtpFailure = false;
@@ -39,6 +40,8 @@ beforeAll(async () => {
   await server.listen(8587, 'localhost');
 
   await sequelize.sync();
+
+  jest.setTimeout(30000);
 });
 
 beforeEach(() => {
@@ -48,6 +51,7 @@ beforeEach(() => {
 
 afterAll(async () => {
   await server.close();
+  jest.setTimeout(5000);
 });
 
 const validUser = {
@@ -61,12 +65,17 @@ const postUser = (user = validUser, options = {}) => {
   if (options.language) {
     agent.set('Accept-Language', options.language);
   }
+  // console.log('user: ', user);
+  // console.log('agent: ', agent);
+  // console.log('app: ', app);
   return agent.send(user);
 };
 
 describe('User Registration', () => {
   it('returns 200 OK when signup request is valid', async () => {
     const response = await postUser();
+    // console.log('response: ', response);
+    // console.log('response.status: ', response.status);
     expect(response.status).toBe(200);
   });
 
