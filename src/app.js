@@ -25,6 +25,8 @@ const app = express();
 
 // console.log('app: ', app);
 
+// app.listen(3000, () => console.log('app is running!'));
+
 app.use(middleware.handle(i18next));
 
 app.use(express.json());

@@ -26,7 +26,7 @@ const addUsers = async (activeUserCount, inactiveUserCount = 0) => {
     await User.create({
       username: `user${i + 1}`,
       email: `user${i + 1}@mail.com`,
-      inactive: i > activeUserCount,
+      inactive: i > activeUserCount - 1,
     });
   }
 };
@@ -53,6 +53,15 @@ describe('Listing Users', () => {
   it('returns 6 users in page content when there are active 6 users and inactive 5 users in database', async () => {
     await addUsers(6, 5);
     const response = await getUsers();
+    // console.log(response.body.content[0]);
+    // console.log(response.body.content.length);
+    // console.log(response.body.content);
     expect(response.body.content.length).toBe(6);
+  });
+  it('returns only id, username and email in content array for each user', async () => {
+    await addUsers(11);
+    const response = await getUsers();
+    const user = response.body.content[0];
+    expect(Object.keys(user)).toMatchObject(['id', 'username', 'email']);
   });
 });
