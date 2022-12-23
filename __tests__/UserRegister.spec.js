@@ -68,13 +68,15 @@ const postUser = (user = validUser, options = {}) => {
   // console.log('user: ', user);
   // console.log('agent: ', agent);
   // console.log('app: ', app);
+  // console.log('agent.send(user): ', agent.send(user));
   return agent.send(user);
 };
 
 describe('User Registration', () => {
   it('returns 200 OK when signup request is valid', async () => {
+    // request(app);
     const response = await postUser();
-    // console.log('response: ', response);
+    console.log('response: ', response);
     // console.log('response.status: ', response.status);
     expect(response.status).toBe(200);
   });
@@ -369,9 +371,13 @@ describe('Account activation', () => {
     'returns $message when token is $tokenStatus and language is $language',
     async ({ language, tokenStatus, message }) => {
       await postUser();
+      // console.log('postUser: ', postUser);
       let token = 'this-token-does-not-exist';
+      // console.log('token: ', token);
       if (tokenStatus === 'correct') {
+        // console.log('tokenStatus: ', tokenStatus);
         let users = await User.findAll();
+        // console.log('users: ', users);
         token = users[0].activationToken;
       }
       const response = await request(app)
