@@ -6,7 +6,8 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development nodemon index",
     "test": "cross-env NODE_ENV=test jest --watch --detectOpenHandles",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:staging": "cross-env NODE_ENV=test jest -f . --runInBand --forceExit"
   },
   "repository": {
     "type": "git",
