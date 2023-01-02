@@ -37,7 +37,7 @@ beforeAll(async () => {
     },
   });
 
-  await server.listen(8587, 'localhost');
+  await server.listen(8587, '127.0.0.1');
 
   await sequelize.sync();
 
