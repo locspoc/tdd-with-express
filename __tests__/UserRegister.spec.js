@@ -41,7 +41,7 @@ beforeAll(async () => {
 
   await sequelize.sync();
 
-  jest.setTimeout(30000);
+  jest.setTimeout(10000);
 });
 
 beforeEach(() => {
@@ -51,7 +51,7 @@ beforeEach(() => {
 
 afterAll(async () => {
   await server.close();
-  jest.setTimeout(5000);
+  jest.setTimeout(10000);
 });
 
 const validUser = {
