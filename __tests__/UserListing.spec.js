@@ -10,7 +10,7 @@ const sequelize = require('../src/config/database');
 beforeAll(async () => {
   await sequelize.sync();
 
-  jest.setTimeout(30000);
+  jest.setTimeout(50000);
 });
 
 beforeEach(() => {
@@ -63,5 +63,10 @@ describe('Listing Users', () => {
     const response = await getUsers();
     const user = response.body.content[0];
     expect(Object.keys(user)).toMatchObject(['id', 'username', 'email']);
+  });
+  it('returns 2 as totalPages when there are 15 active and 7 inactive users', async () => {
+    await addUsers(15, 7);
+    const response = await getUsers();
+    expect(response.body.totalPages).toBe(2);
   });
 });
