@@ -6,6 +6,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
+const { describe } = require('../src/user/User');
 
 beforeAll(async () => {
   await sequelize.sync();
@@ -103,5 +104,19 @@ describe('Listing Users', () => {
     const response = await getUsers().query({ size: 'size', page: 'page' });
     expect(response.body.size).toBe(10);
     expect(response.body.page).toBe(0);
+  });
+});
+describe('Get User', () => {
+  it('returns 404 when user not found', async () => {
+    const response = await request(app).get('/api/1.0/users/5');
+    expect(response.status).toBe(404);
+  });
+  it.each`
+    language | message
+    ${'tr'}  | ${'Kullanıcı bulunamadı'}
+    ${'en'}  | ${'User not found'}
+  `('returns $message for unknown user when language is set to $language', async ({ language, message }) => {
+    const response = await (await request(app).get('/api/1.0/users/5')).setEncoding('Accept-Language', language);
+    expect(response.body.message).toBe(message);
   });
 });
