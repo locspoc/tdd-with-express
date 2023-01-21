@@ -41,7 +41,7 @@ beforeAll(async () => {
 
   await sequelize.sync();
 
-  jest.setTimeout(30000);
+  jest.setTimeout(10000);
 });
 
 beforeEach(() => {
@@ -51,7 +51,7 @@ beforeEach(() => {
 
 afterAll(async () => {
   await server.close();
-  jest.setTimeout(5000);
+  jest.setTimeout(10000);
 });
 
 const validUser = {
@@ -76,7 +76,7 @@ describe('User Registration', () => {
   it('returns 200 OK when signup request is valid', async () => {
     // request(app);
     const response = await postUser();
-    console.log('response: ', response);
+    // console.log('response: ', response);
     // console.log('response.status: ', response.status);
     expect(response.status).toBe(200);
   });
