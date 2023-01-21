@@ -6,6 +6,7 @@ const { check, validationResult } = require('express-validator');
 // const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../error/ValidationException');
 const pagination = require('../middleware/pagination');
+const UserNotFoundException = require('./UserNotFoundException');
 
 // const validateUsername = (req, res, next) => {
 //   const user = req.body;
@@ -90,8 +91,15 @@ router.get('/api/1.0/users', pagination, async (req, res) => {
   res.send(users);
 });
 
-router.get('/api/1.0/users/:id', (req, res) => {
-  res.status(404).send({ message: req.t('user_not_found') });
+router.get('/api/1.0/users/:id', async (req, res, next) => {
+  try {
+    const user = await UserService.getUser(req.params.id);
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+
+  // throw new UserNotFoundException();
 });
 
 module.exports = router;
