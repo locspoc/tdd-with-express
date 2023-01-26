@@ -6,7 +6,7 @@ const { check, validationResult } = require('express-validator');
 // const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../error/ValidationException');
 const pagination = require('../middleware/pagination');
-const UserNotFoundException = require('./UserNotFoundException');
+// const UserNotFoundException = require('./UserNotFoundException');
 
 // const validateUsername = (req, res, next) => {
 //   const user = req.body;
