@@ -66,7 +66,7 @@ const getUser = async (id) => {
   if (!user) {
     throw new UserNotFoundException();
   }
-  console.log('user: ', user);
+  // console.log('user: ', user);
   return user;
 };
 
