@@ -6,6 +6,7 @@ const { check, validationResult } = require('express-validator');
 // const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../error/ValidationException');
 const pagination = require('../middleware/pagination');
+const ForbiddenException = require('../error/ForbiddenException');
 // const UserNotFoundException = require('./UserNotFoundException');
 
 // const validateUsername = (req, res, next) => {
@@ -100,6 +101,10 @@ router.get('/api/1.0/users/:id', async (req, res, next) => {
   }
 
   // throw new UserNotFoundException();
+});
+
+router.put('/api/1.0/users/:id', () => {
+  throw new ForbiddenException('unauthorized_user_update');
 });
 
 module.exports = router;
