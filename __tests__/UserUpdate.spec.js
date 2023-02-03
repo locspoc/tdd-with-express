@@ -8,6 +8,7 @@ const tr = require('../locales/tr/translation.json');
 
 beforeAll(async () => {
   await sequelize.sync();
+  jest.setTimeout(30000);
 });
 
 beforeEach(async () => {
@@ -78,5 +79,13 @@ describe('User Update', () => {
       auth: { email: 'user1@mail.com', password: 'P4ssword' },
     });
     expect(response.status).toBe(403);
+  });
+  it('returns 200 ok when valid update request sent from authorized user', async () => {
+    const savedUser = await addUser();
+    const validUpdate = { username: 'user1-updated' };
+    const response = await putUser(savedUser.id, validUpdate, {
+      auth: { email: savedUser.email, password: 'P4ssword' },
+    });
+    expect(response.status).toBe(200);
   });
 });
