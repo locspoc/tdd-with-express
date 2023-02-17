@@ -1,35 +1,11 @@
 const express = require('express');
 const UserService = require('./UserService');
-// const User = require('./User');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
-// const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../error/ValidationException');
 const pagination = require('../middleware/pagination');
 const ForbiddenException = require('../error/ForbiddenException');
-// const UserNotFoundException = require('./UserNotFoundException');
-const bcrypt = require('bcrypt');
-
-// const validateUsername = (req, res, next) => {
-//   const user = req.body;
-//   if (user.username === null) {
-//     req.validationErrors = {
-//       username: 'Username can not be null',
-//     };
-//   }
-//   next();
-// };
-
-// const validateEmail = (req, res, next) => {
-//   const user = req.body;
-//   if (user.email === null) {
-//     req.validationErrors = {
-//       ...req.validationErrors,
-//       email: 'Email can not be null',
-//     };
-//   }
-//   next();
-// };
+const basicAuthentication = require('../middleware/basicAuthentication');
 
 router.post(
   '/api/1.0/users',
@@ -104,29 +80,15 @@ router.get('/api/1.0/users/:id', async (req, res, next) => {
   // throw new UserNotFoundException();
 });
 
-router.put('/api/1.0/users/:id', async (req, res, next) => {
-  const authorization = req.headers.authorization;
-  if (authorization) {
-    const encoded = authorization.substring(6);
-    const decoded = Buffer.from(encoded, 'base64').toString('ascii');
-    const [email, password] = decoded.split(':');
-    const user = await UserService.findByEmail(email);
-    if (!user) {
-      return next(new ForbiddenException('unauthorized_user_update'));
-    }
-    if (user.id != req.params.id) {
-      return next(new ForbiddenException('unauthorized_user_update'));
-    }
-    if (user.inactive) {
-      return next(new ForbiddenException('unauthorized_user_update'));
-    }
+router.put('/api/1.0/users/:id', basicAuthentication, async (req, res, next) => {
+  const authenticatedUser = req.authenticatedUser;
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return next(new ForbiddenException('unauthorized_user_update'));
-    }
-    return res.send();
+  if (!authenticatedUser || authenticatedUser.id != req.params.id) {
+    return next(new ForbiddenException('unauthorized_user_update'));
   }
+
+  await UserService.updateUser(req.params.id, req.body);
+  return res.send();
 });
 
 module.exports = router;
